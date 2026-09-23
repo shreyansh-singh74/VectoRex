@@ -1,16 +1,17 @@
 #pragma once
+#include <cstddef>
 #include<vector>
 
 class Vector{
     private:
         std::vector<float> data_;
-    public:
 
+    public:
     explicit Vector(std::vector<float> data);
 
-    int size() const;
+    std::size_t size() const;
 
-    float get(int index);
+    float at(std::size_t index) const;
 
-    std::vector<float> getData();
+    const std::vector<float>& data() const;
 };

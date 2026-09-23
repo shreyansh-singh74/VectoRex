@@ -1,21 +1,23 @@
 #include "vectorex/vector.hpp"
+#include<utility>
+#include <cstddef>
 
-Vector::Vector(std::vector<float> data)
-{
-    data_ = data;
+// constructor
+Vector::Vector(std::vector<float> data):data_(std::move(data)){
+
 }
 
-int Vector::size() const
-{
+// size function
+std::size_t Vector::size() const {
     return data_.size();
 }
 
-float Vector::get(int index)
-{
+// access element
+float Vector::at(std::size_t index) const {
     return data_[index];
 }
 
-std::vector<float> Vector::getData()
-{
+//get underlying vector
+const std::vector<float>& Vector::data() const{
     return data_;
 }
