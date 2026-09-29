@@ -100,7 +100,7 @@ namespace vectorex{
         out.write(reinterpret_cast<const char*>(&count), sizeof(count));
 
         for(auto& e:entries_){
-            uint32_t id = e.id;
+            uint64_t id = static_cast<uint64_t>(e.id);
             out.write(reinterpret_cast<const char*>(&id), sizeof(id));
             out.write(reinterpret_cast<const char*>(e.vector.data().data()), dim*sizeof(float));
         }
@@ -114,5 +114,50 @@ namespace vectorex{
         if(!in){
             throw std::runtime_error("Cannot open file for load");
         }
+
+        uint32_t magic;
+        uint32_t version;
+        uint64_t dimension;
+        uint64_t count;
+
+        in.read(reinterpret_cast<char*>(&magic),sizeof(magic));
+        in.read(reinterpret_cast<char*>(&version),sizeof(version));
+        in.read(reinterpret_cast<char*>(&dimension),sizeof(dimension));
+        in.read(reinterpret_cast<char*>(&count),sizeof(count));
+
+        if(!in){
+            throw std::runtime_error("Corrupted file: incomplete header");
+        }
+
+        if(magic != 0x56524558){
+            throw std::runtime_error("Invalid file format");
+        }
+
+        if(version != 1){
+            throw std::runtime_error("Unsupported file version");
+        }
+
+        VectorStore store(static_cast<size_t>(dimension));
+
+        for(uint64_t i=0;i<count;i++){
+            uint64_t id;
+
+            in.read(reinterpret_cast<char*>(&id),sizeof(id));
+
+            if(!in){
+                throw std::runtime_error("Corrupted file: incomplete record ID");
+            }
+            std::vector<float> data(dimension);
+
+            in.read(reinterpret_cast<char*>(data.data()),dimension*sizeof(float));
+
+            if(!in){
+                throw std::runtime_error("Corrupted file: incomplete vector data");
+            }
+
+            store.add(static_cast<size_t>(id), Vector(std::move(data)));
+        }
+
+        return store;
     }
 }

@@ -75,3 +75,5 @@ add_test(
 add_executable(BruteForceBenchmark benchmarks/brute_force_benchmark.cpp src/vector.cpp src/distance.cpp src/vector_store.cpp)
 
 target_include_directories(BruteForceBenchmark PRIVATE include)
+
+add_executable(VectoRexInspector src/inspector.cpp)
