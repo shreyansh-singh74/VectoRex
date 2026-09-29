@@ -2,7 +2,7 @@
 
 ### A from-scratch, high-performance vector similarity search engine in C++ to understand the wokring of the vectordb and systems.
 
-
+```mermaid
 flowchart TD
     A[".dat file"] --> B["Header"]
     B --> C["Magic: 0x56524558"]
@@ -21,3 +21,4 @@ flowchart TD
     K --> M["Vector floats"]
 
     G --> N["..."]
+```
