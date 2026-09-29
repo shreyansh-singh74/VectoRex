@@ -9,8 +9,8 @@ bool nearly_equal(float a, float b, float epsilon = 0.0001f) {
 }
 
 int main() {
-    Vector a({1.0f, 2.0f, 3.0f});
-    Vector b({4.0f, 6.0f, 3.0f});
+    vectorex::Vector a({1.0f, 2.0f, 3.0f});
+    vectorex::Vector b({4.0f, 6.0f, 3.0f});
 
     assert(nearly_equal(
         vectorex::squared_l2_distance(a, b),

@@ -3,13 +3,13 @@
 #include "vectorex/vector_store.hpp"
 
 int main() {
-    vectorex::VectorStore store;
+    vectorex::VectorStore store(3);
 
-    store.add(101, Vector({1.0f, 2.0f, 3.0f}));
-    store.add(102, Vector({4.0f, 6.0f, 3.0f}));
-    store.add(103, Vector({2.0f, 2.0f, 4.0f}));
+    store.add(101, vectorex::Vector({1.0f, 2.0f, 3.0f}));
+    store.add(102, vectorex::Vector({4.0f, 6.0f, 3.0f}));
+    store.add(103, vectorex::Vector({2.0f, 2.0f, 4.0f}));
 
-    Vector query({1.0f, 2.0f, 3.0f});
+    vectorex::Vector query({1.0f, 2.0f, 3.0f});
 
     auto results = store.search(query, 2);
 

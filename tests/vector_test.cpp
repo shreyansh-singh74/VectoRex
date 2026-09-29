@@ -4,7 +4,7 @@
 #include "vectorex/vector.hpp"
 
 int main() {
-    Vector vec({10.0f, 20.0f, 30.0f});
+    vectorex::Vector vec({10.0f, 20.0f, 30.0f});
 
     assert(vec.size() == 3);
 

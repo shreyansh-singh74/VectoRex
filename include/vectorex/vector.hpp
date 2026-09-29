@@ -2,16 +2,18 @@
 #include <cstddef>
 #include<vector>
 
-class Vector{
-    private:
-        std::vector<float> data_;
+namespace vectorex {
+    class Vector{
+        private:
+            std::vector<float> data_;
 
-    public:
-    explicit Vector(std::vector<float> data);
+        public:
+        explicit Vector(std::vector<float> data);
 
-    std::size_t size() const;
+        std::size_t size() const;
 
-    float at(std::size_t index) const;
+        float at(std::size_t index) const;
 
-    const std::vector<float>& data() const;
-};
+        const std::vector<float>& data() const;
+    };
+}

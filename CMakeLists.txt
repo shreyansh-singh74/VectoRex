@@ -53,3 +53,25 @@ add_test(
     NAME DistanceTests
     COMMAND VectoRexDistanceTests
 )
+
+add_executable(VectorStoreTests
+    tests/vector_store_test.cpp
+    src/vector.cpp
+    src/distance.cpp
+    src/vector_store.cpp
+)
+
+target_include_directories(VectorStoreTests
+    PRIVATE
+        include
+)
+
+add_test(
+    NAME VectorStoreTests
+    COMMAND VectorStoreTests
+)
+
+
+add_executable(BruteForceBenchmark benchmarks/brute_force_benchmark.cpp src/vector.cpp src/distance.cpp src/vector_store.cpp)
+
+target_include_directories(BruteForceBenchmark PRIVATE include)
