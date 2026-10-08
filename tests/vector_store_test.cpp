@@ -228,7 +228,7 @@ void test_large_id_persistence() {
 
     vectorex::VectorStore original(3);
 
-    original.add(
+    original.insert(
         large_id,
         vectorex::Vector({1.0f, 2.0f, 3.0f})
     );
@@ -254,9 +254,9 @@ void test_persistence() {
 
     vectorex::VectorStore original(3);
 
-    original.add(101, vectorex::Vector({1.0f, 2.0f, 3.0f}));
-    original.add(103, vectorex::Vector({4.0f, 5.0f, 6.0f}));
-    original.add(105, vectorex::Vector({7.0f, 8.0f, 9.0f}));
+    original.insert(101, vectorex::Vector({1.0f, 2.0f, 3.0f}));
+    original.insert(103, vectorex::Vector({4.0f, 5.0f, 6.0f}));
+    original.insert(105, vectorex::Vector({7.0f, 8.0f, 9.0f}));
 
     original.save(path);
 
@@ -279,6 +279,151 @@ void test_persistence() {
     // std::remove(path.c_str());
 }
 
+void test_duplicate_id_rejected() {
+    vectorex::VectorStore store(3);
+
+    store.insert(101, vectorex::Vector({1.0, 2.0, 3.0}));
+
+    bool threw = false;
+
+    try {
+        store.insert(101, vectorex::Vector({4.0, 5.0, 6.0}));
+    } catch (const std::invalid_argument&) {
+        threw = true;
+    }
+
+    assert(threw);
+    assert(store.size() == 1);
+}
+
+void test_contains() {
+    vectorex::VectorStore store(3);
+
+    store.insert(101, vectorex::Vector({1.0, 2.0, 3.0}));
+
+    assert(store.contains(101));
+    assert(!store.contains(999));
+}
+
+void test_remove() {
+    vectorex::VectorStore store(3);
+
+    store.insert(101, vectorex::Vector({1.0, 2.0, 3.0}));
+    store.insert(102, vectorex::Vector({4.0, 5.0, 6.0}));
+
+    store.remove(101);
+
+    assert(!store.contains(101));
+    assert(store.contains(102));
+    assert(store.size() == 1);
+}
+
+void test_update() {
+    vectorex::VectorStore store(3);
+
+    store.insert(101, vectorex::Vector({1.0, 2.0, 3.0}));
+
+    store.update(101, vectorex::Vector({10.0, 20.0, 30.0}));
+
+    auto result = store.search(
+        vectorex::Vector({10.0, 20.0, 30.0}),
+        1
+    );
+
+    assert(result.size() == 1);
+    assert(result[0].id == 101);
+    assert(result[0].distance == 0.0);
+}
+
+
+void test_remove_nonexistent_id() {
+    vectorex::VectorStore store(3);
+
+    store.insert(101, vectorex::Vector({1.0, 2.0, 3.0}));
+
+    bool threw = false;
+
+    try {
+        store.remove(999);
+    } catch (const std::invalid_argument&) {
+        threw = true;
+    }
+
+    assert(threw);
+    assert(store.size() == 1);
+}
+
+
+void test_update_nonexistent_id() {
+    vectorex::VectorStore store(3);
+
+    store.insert(101, vectorex::Vector({1.0, 2.0, 3.0}));
+
+    bool threw = false;
+
+    try {
+        store.update(999, vectorex::Vector({4.0, 5.0, 6.0}));
+    } catch (const std::invalid_argument&) {
+        threw = true;
+    }
+
+    assert(threw);
+    assert(store.size() == 1);
+}
+
+void test_update_dimension_mismatch() {
+    vectorex::VectorStore store(3);
+
+    store.insert(101, vectorex::Vector({1.0, 2.0, 3.0}));
+
+    bool threw = false;
+
+    try {
+        store.update(101, vectorex::Vector({4.0, 5.0}));
+    } catch (const std::invalid_argument&) {
+        threw = true;
+    }
+
+    assert(threw);
+    assert(store.size() == 1);
+}
+
+void test_cosine_search() {
+    vectorex::VectorStore store(2);
+
+    store.insert(101, vectorex::Vector({1.0, 0.0}));
+    store.insert(102, vectorex::Vector({0.0, 1.0}));
+    store.insert(103, vectorex::Vector({0.9, 0.1}));
+
+    auto result = store.search(
+        vectorex::Vector({1.0, 0.0}),
+        1,
+        vectorex::DistanceMetric::Cosine
+    );
+
+    assert(result.size() == 1);
+    assert(result[0].id == 101);
+}
+
+void test_inner_product_search() {
+    vectorex::VectorStore store(2);
+
+    store.insert(101, vectorex::Vector({1.0, 1.0}));
+    store.insert(102, vectorex::Vector({5.0, 5.0}));
+    store.insert(103, vectorex::Vector({2.0, 1.0}));
+
+    auto result = store.search(
+        vectorex::Vector({1.0, 1.0}),
+        1,
+        vectorex::DistanceMetric::InnerProduct
+    );
+
+    assert(result.size() == 1);
+    assert(result[0].id == 102);
+}
+
+
+
 
 int main(){
     test_insert_one_vector(); test_insert_multiple_vectors(); test_search_returns_closest_vector();
@@ -289,6 +434,19 @@ int main(){
     test_truncated_file();
     test_unsupported_version();
     test_large_id_persistence();
+    test_duplicate_id_rejected();
+
+    test_contains();
+    test_remove();
+    test_update();
+
+    test_remove_nonexistent_id();
+    test_update_nonexistent_id();
+    test_update_dimension_mismatch();
+
+    test_cosine_search();
+    test_inner_product_search();
+
 
     std::cout<<"All VectorStore tests passed!\n";
 }

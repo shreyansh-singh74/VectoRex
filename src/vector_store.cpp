@@ -19,14 +19,30 @@ namespace vectorex{
         if(vector.size() != dimension_){
             throw std::invalid_argument("Dimension mismatch on insert");
         }
+
+        for(auto& entry : entries_){
+            if(entry.id == id){
+                throw std::invalid_argument("Duplicate vector ID");
+            }
+        }
+
         entries_.push_back({id,std::move(vector)});
     }
 
-    void VectorStore::add(std::size_t id,Vector vector){
-        insert(id, std::move(vector));
+    float calculate_distance(const vectorex::Vector& query, const vectorex::Vector& vector,vectorex::DistanceMetric metric){
+        switch (metric) {
+            case vectorex::DistanceMetric::SquaredL2:
+                return vectorex::squared_l2_distance(query, vector);
+            case vectorex::DistanceMetric::Cosine:
+                return 1.0 - vectorex::cosine_similarity(query, vector);
+            case vectorex::DistanceMetric::InnerProduct:
+                return -vectorex::inner_product(query, vector);
+        }
+
+        throw std::invalid_argument("Unknown distance metric");
     }
 
-    std::vector<SearchResult> VectorStore::search(const Vector& query,std::size_t k) const{
+    std::vector<SearchResult> VectorStore::search(const Vector& query,std::size_t k,DistanceMetric metric) const{
         if(query.size() != dimension_){
             throw std::invalid_argument("Dimension mismatch on search");
         }
@@ -38,7 +54,7 @@ namespace vectorex{
             r.reserve(entries_.size());
 
             for(auto& e : entries_){
-                r.push_back({e.id,squared_l2_distance(query, e.vector)});
+                r.push_back({e.id,calculate_distance(query, e.vector, metric)});
             }
 
             std::sort(r.begin(),r.end(),[](auto& a, auto& b){
@@ -155,9 +171,50 @@ namespace vectorex{
                 throw std::runtime_error("Corrupted file: incomplete vector data");
             }
 
-            store.add(static_cast<size_t>(id), Vector(std::move(data)));
+            store.insert(static_cast<size_t>(id), Vector(std::move(data)));
         }
 
         return store;
     }
+
+    bool VectorStore::contains(std::uint64_t id) const {
+        for (const auto& entry : entries_) {
+            if (entry.id == id) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void VectorStore::remove(std::uint64_t id) {
+        for (auto it = entries_.begin(); it != entries_.end(); ++it) {
+            if (it->id == id) {
+                entries_.erase(it);
+                return;
+            }
+        }
+
+        throw std::invalid_argument("Vector ID not found");
+    }
+
+    void VectorStore::update(
+        std::uint64_t id,
+        const Vector& vector
+    ) {
+        if (vector.size() != dimension_) {
+            throw std::invalid_argument("Vector dimension mismatch");
+        }
+
+        for (auto& entry : entries_) {
+            if (entry.id == id) {
+                entry.vector = vector;
+                return;
+            }
+        }
+
+        throw std::invalid_argument("Vector ID not found");
+    }
+
+
 }
