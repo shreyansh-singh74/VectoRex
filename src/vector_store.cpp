@@ -71,7 +71,7 @@ namespace vectorex{
         std::priority_queue<SearchResult, std::vector<SearchResult>,decltype(cmp)> heap(cmp);
 
         for(auto& e : entries_){
-            SearchResult cur{e.id,squared_l2_distance(query, e.vector)};
+            SearchResult cur{e.id,calculate_distance(query, e.vector,metric)};
             if(heap.size()<k){
                 heap.push(cur);
             }
