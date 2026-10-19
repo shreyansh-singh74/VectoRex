@@ -77,3 +77,22 @@ add_executable(BruteForceBenchmark benchmarks/brute_force_benchmark.cpp src/vect
 target_include_directories(BruteForceBenchmark PRIVATE include)
 
 add_executable(VectoRexInspector src/inspector.cpp)
+
+
+add_executable(HnswTests
+    tests/hnsw_test.cpp
+    src/vector.cpp
+    src/vector_store.cpp
+    src/distance.cpp
+    src/hnsw_index.cpp
+)
+
+target_include_directories(HnswTests
+    PRIVATE
+        include
+)
+
+add_test(
+    NAME HnswTests
+    COMMAND HnswTests
+)

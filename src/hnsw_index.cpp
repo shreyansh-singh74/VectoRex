@@ -63,7 +63,7 @@ int HnswIndex::random_level() {
   return level;
 }
 
-bool HnswIndex::constains(std::size_t id) const {
+bool HnswIndex::contains(std::size_t id) const {
   return id_to_index_.find(id) != id_to_index_.end();
 }
 
@@ -186,21 +186,128 @@ HnswIndex::select_neighbours(const Vector &query,
   ranked.reserve(candidates.size());
 
   for (std::size_t index : candidates) {
-      ranked.push_back({
-          calculate_distance(query, nodes_[index].vector, metric),
-          index
-      });
+    ranked.push_back(
+        {calculate_distance(query, nodes_[index].vector, metric), index});
   }
 
-  std::sort(ranked.begin(),ranked.end());
+  std::sort(ranked.begin(), ranked.end());
 
   std::vector<std::size_t> result;
-  result.reserve(std::min(count,ranked.size()));
+  result.reserve(std::min(count, ranked.size()));
 
-  for (std::size_t i=0;i<std::min(count,ranked.size());i++) {
-      result.push_back(ranked[i].second);
+  for (std::size_t i = 0; i < std::min(count, ranked.size()); i++) {
+    result.push_back(ranked[i].second);
   }
   return result;
+}
+
+void HnswIndex::insert(std::size_t id, Vector vector) {
+  if (vector.size() != dimension_) {
+    throw std::invalid_argument("Vector dimension does not match HNSW index");
+  }
+
+  if (contains(id)) {
+    throw std::invalid_argument("Duplicate vector ID");
+  }
+
+  int level = random_level();
+  const std::size_t new_index = nodes_.size();
+
+  nodes_.emplace_back(id, std::move(vector), level);
+  id_to_index_[id] = new_index;
+
+  if (nodes_.size() == 1) {
+    entry_point_ = new_index;
+    max_level_ = level;
+    return;
+  }
+
+  const Vector &query = nodes_[new_index].vector;
+  std::size_t entry = entry_point_;
+
+  for (int current_level = max_level_; current_level > level; current_level--) {
+    entry = greedy_search_layer(query, entry, level, DistanceMetric::SquaredL2);
+  }
+
+  const int connect_level = std::min(level, max_level_);
+
+  for (int current_level = connect_level; current_level >= 0; current_level--) {
+    std::vector<std::size_t> candidates =
+        search_layer(query, {entry}, ef_construction_, current_level,
+                     DistanceMetric::SquaredL2);
+
+    std::vector<std::size_t> selected =
+        select_neighbours(query, candidates, M_, DistanceMetric::SquaredL2);
+
+    nodes_[new_index].neighbours[current_level] = selected;
+
+    for (std::size_t neighbour : selected) {
+      auto &neighbour_list = nodes_[neighbour].neighbours[current_level];
+
+      neighbour_list.push_back(new_index);
+
+      if (neighbour_list.size() > M_) {
+        neighbour_list =
+            select_neighbours(nodes_[neighbour].vector, neighbour_list, M_,
+                              DistanceMetric::SquaredL2);
+      }
+    }
+
+    if (!candidates.empty()) {
+      entry = candidates.front();
+    }
+  }
+
+  if (level > max_level_) {
+    max_level_ = level;
+    entry_point_ = new_index;
+  }
+}
+
+std::vector<SearchResult> HnswIndex::search(const Vector &query, std::size_t k,
+                                            DistanceMetric metric) const {
+  if (metric != DistanceMetric::SquaredL2) {
+    throw std::invalid_argument(
+        "HNSW currently supports only SquaredL2 distance");
+  }
+
+  if (query.size() != dimension_) {
+    throw std::invalid_argument("Query dimension does not match HNSW index");
+  }
+  if (k == 0 || nodes_.empty()) {
+    return {};
+  }
+
+  std::size_t entry = entry_point_;
+
+  for (int level = max_level_; level > 0; level--) {
+    entry = greedy_search_layer(query, entry, level, metric);
+  }
+
+  const std::size_t ef = std::max(ef_search_, k);
+
+  std::vector<std::size_t> candidates =
+      search_layer(query, {entry}, ef, 0, metric);
+
+  std::vector<SearchResult> results;
+
+  results.reserve(std::min(k, candidates.size()));
+
+  for (std::size_t index : candidates) {
+    results.push_back(
+        {nodes_[index].id,
+         calculate_distance(query, nodes_[index].vector, metric)});
+  }
+
+  std::sort(results.begin(), results.end(),
+            [](const SearchResult &a, const SearchResult &b) {
+              return a.distance < b.distance;
+            });
+
+  if (results.size() > k) {
+    results.resize(k);
+  }
+  return results;
 }
 
 } // namespace vectorex

@@ -27,7 +27,7 @@ private:
   std::size_t ef_search_;
 
   int max_level_ = -1;
-  std::size_t entry_point = 0;
+  std::size_t entry_point_ = 0;
 
   std::mt19937 rng_;
 
@@ -60,11 +60,11 @@ public:
   search(const Vector &query, std::size_t k,
          DistanceMetric metric = DistanceMetric::SquaredL2) const;
 
-  bool constains(std::size_t id) const;
+  bool contains(std::size_t id) const;
 
   std::size_t size() const;
   std::size_t dimension() const;
 
   void set_ef_search(std::size_t ef_search);
 };
-}
+} // namespace vectorex
