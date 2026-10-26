@@ -11,7 +11,8 @@
 
 namespace vectorex{
 
-    VectorStore::VectorStore(std::size_t dimension): dimension_(dimension){
+    VectorStore::VectorStore(std::size_t dimension)
+        : dimension_(dimension), hnsw_index(dimension) {
 
     }
 
@@ -24,6 +25,10 @@ namespace vectorex{
             if(entry.id == id){
                 throw std::invalid_argument("Duplicate vector ID");
             }
+        }
+
+        if(use_hnsw_){
+            hnsw_index.insert(id, vector);
         }
 
         entries_.push_back({id,std::move(vector)});
@@ -47,6 +52,10 @@ namespace vectorex{
             throw std::invalid_argument("Dimension mismatch on search");
         }
         if(k == 0 || entries_.empty()) return {};
+
+        if(use_hnsw_){
+            return hnsw_index.search(query, k, metric);
+        }
 
         // fast if -> n <= k
         if(k>= entries_.size()){
@@ -191,6 +200,9 @@ namespace vectorex{
         for (auto it = entries_.begin(); it != entries_.end(); ++it) {
             if (it->id == id) {
                 entries_.erase(it);
+                if (use_hnsw_) {
+                    rebuild_hnsw();
+                }
                 return;
             }
         }
@@ -209,6 +221,9 @@ namespace vectorex{
         for (auto& entry : entries_) {
             if (entry.id == id) {
                 entry.vector = vector;
+                if (use_hnsw_) {
+                    rebuild_hnsw();
+                }
                 return;
             }
         }
@@ -216,5 +231,18 @@ namespace vectorex{
         throw std::invalid_argument("Vector ID not found");
     }
 
+    void VectorStore::enable_hnsw(bool enabled) {
+        use_hnsw_ = enabled;
+        if (use_hnsw_) {
+            rebuild_hnsw();
+        }
+    }
+
+    void VectorStore::rebuild_hnsw() {
+        hnsw_index = HnswIndex(dimension_);
+        for (const auto& entry : entries_) {
+            hnsw_index.insert(entry.id, entry.vector);
+        }
+    }
 
 }

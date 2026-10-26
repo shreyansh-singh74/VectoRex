@@ -423,6 +423,48 @@ void test_inner_product_search() {
 }
 
 
+void test_hnsw_integration() {
+    vectorex::VectorStore store(2);
+
+    store.insert(1, vectorex::Vector({1.0f, 1.0f}));
+    store.insert(2, vectorex::Vector({2.0f, 2.0f}));
+    store.insert(3, vectorex::Vector({10.0f, 10.0f}));
+
+    // Enable HNSW search.
+    store.enable_hnsw();
+
+    auto results = store.search(vectorex::Vector({1.1f, 1.1f}), 2);
+
+    assert(results.size() == 2);
+    assert(results[0].id == 1);
+    assert(results[1].id == 2);
+
+    // Updating a vector should refresh the HNSW index.
+    store.update(1, vectorex::Vector({20.0f, 20.0f}));
+
+    results = store.search(vectorex::Vector({1.1f, 1.1f}), 1);
+
+    assert(results.size() == 1);
+    assert(results[0].id == 2);
+
+    // Removing a vector should refresh the HNSW index.
+    store.remove(2);
+
+    results = store.search(vectorex::Vector({1.1f, 1.1f}), 1);
+
+    assert(results.size() == 1);
+    assert(results[0].id == 3);
+
+    // Disabling HNSW restores exact search.
+    store.enable_hnsw(false);
+
+    results = store.search(vectorex::Vector({1.1f, 1.1f}), 1);
+
+    assert(results.size() == 1);
+    assert(results[0].id == 3);
+}
+
+
 
 
 int main(){
@@ -446,6 +488,8 @@ int main(){
 
     test_cosine_search();
     test_inner_product_search();
+
+    test_hnsw_integration();
 
 
     std::cout<<"All VectorStore tests passed!\n";

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "vectorex/types.hpp"
 #include "vectorex/vector.hpp"
-#include "vectorex/vector_store.hpp"
 #include <cstddef>
 #include <random>
 #include <unordered_map>

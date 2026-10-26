@@ -1,4 +1,5 @@
 #include "vectorex/hnsw_index.hpp"
+#include "vectorex/vector_store.hpp"
 
 #include <cassert>
 #include <iostream>

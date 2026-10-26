@@ -14,6 +14,7 @@ add_executable(VectoRex
     src/vector.cpp
     src/distance.cpp
     src/vector_store.cpp
+    src/hnsw_index.cpp
 )
 
 target_include_directories(VectoRex
@@ -59,6 +60,7 @@ add_executable(VectorStoreTests
     src/vector.cpp
     src/distance.cpp
     src/vector_store.cpp
+    src/hnsw_index.cpp
 )
 
 target_include_directories(VectorStoreTests
@@ -72,7 +74,7 @@ add_test(
 )
 
 
-add_executable(BruteForceBenchmark benchmarks/brute_force_benchmark.cpp src/vector.cpp src/distance.cpp src/vector_store.cpp)
+add_executable(BruteForceBenchmark benchmarks/brute_force_benchmark.cpp src/vector.cpp src/distance.cpp src/vector_store.cpp src/hnsw_index.cpp)
 
 target_include_directories(BruteForceBenchmark PRIVATE include)
 
