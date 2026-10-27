@@ -226,7 +226,7 @@ void HnswIndex::insert(std::size_t id, Vector vector) {
   std::size_t entry = entry_point_;
 
   for (int current_level = max_level_; current_level > level; current_level--) {
-    entry = greedy_search_layer(query, entry, level, DistanceMetric::SquaredL2);
+    entry = greedy_search_layer(query, entry, current_level, DistanceMetric::SquaredL2);
   }
 
   const int connect_level = std::min(level, max_level_);

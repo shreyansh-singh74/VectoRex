@@ -30,6 +30,10 @@ public:
 
   void insert(std::size_t id, Vector vector);
 
+  void set_hnsw_ef_search(std::size_t ef_search){
+      hnsw_index.set_ef_search(ef_search);
+  }
+
   // void add(std::size_t id,Vector vector);
 
   std::vector<SearchResult>

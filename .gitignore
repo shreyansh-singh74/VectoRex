@@ -1,6 +1,29 @@
+
+# Build directories
 build/
-/.cache/
+build-debug/
+build-release/
+cmake-build-*/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Makefile
+
+# Compiled binaries and libraries
 *.o
 *.a
 *.so
-compile_commands.json
+*.dylib
+*.dll
+*.exe
+a.out
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary database and test files
+*.dat
